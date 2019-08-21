@@ -36,21 +36,21 @@ Note that the answer must be a substring, `pwke` is a subsequence and not a subs
 Build Requirements
 ------------------
 ```
-# Build Requirements here
+Have Java installed and ready to run.
 ```
 
 
 How to build
 ------------
 ```
-# instructions here
+Compile the code with the javac command to get the .class file.
 ```
 
 
 How to Run
 ----------
 ```
-# instructions here
+Run the program and enter the word when the program asks for it.
 ```
 
 
