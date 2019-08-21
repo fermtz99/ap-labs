@@ -1,7 +1,7 @@
 //Fernando Martinez A01630401
 import java.util.*;
 
-public class codeChallange{
+public class codeChallenge{
   public static int valores(String str){
     Set<Character> h = new HashSet<Character>();
     for(int i = 0; i<str.length(); i++){
