@@ -1,0 +1,7 @@
+Fernando Martinez
+A01630401
+The difference between my implementation and the local cat Linux implementation is that the local implementation is faster because:
+My implementation uses normal system calls to read, open, write and close files, making it to send the system call to the kernel
+so it has to wait for the CPU to make usage of the resources.
+While the local implementation is completely optimized for the system and make the changes faster, also it is better because
+it has code for all the exceptions that maybe my implementation couldn't take care of.
