@@ -26,6 +26,25 @@ General instructions
 - Don't forget to handle errors properly.
 - Coding best practices implementation will be also considered.
 
+How to build and run the code
+-----------------------------
+- Compile the library
+'''
+gcc -c logger.c -o logger.o
+'''
+- Compile the code
+'''
+gcc -c testLogger.c -o testLogger.o
+'''
+- Link both codes
+'''
+gcc logger.o testLogger.o -o main.o
+'''
+- Run the code
+'''
+./main.o
+'''
+
 How to submit your work
 =======================
 ```
