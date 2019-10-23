@@ -31,7 +31,7 @@ static const unsigned char d[] = {
 };
 
 void handleSignal(int sig) {
-	infof("Progress: %f%%", progress);
+	infof("Progress: %f%%\n", progress);
 }
 
 // Code from en.wikibooks.org/wiki/Algorithm_Implementation/Miscellaneous/Base64
@@ -47,6 +47,8 @@ int base64encode(const void* data_buf, size_t dataLength, char* result, size_t r
    /* increment over the length of the string, three characters at a time */
    for (x = 0; x < dataLength; x += 3) {
 	progress = (float)(((float)x / (float)dataLength)*100);
+	if((x%10000) == 0)
+		sleep(1);
 
       /* these three 8-bit (ASCII) characters become one 24-bit number */
       n = ((uint32_t)data[x]) << 16; //parenthesis needed, compiler depending on flags can do the shifting before conversion to uint32_t, resulting to 0
@@ -115,6 +117,8 @@ int base64decode (char *in, size_t inLen, unsigned char *out, size_t outLen) {
 
     while (in < end) {
 	progress = (float)(((float)len / (float)inLen)*100);
+	if((len%10000) == 0)
+		sleep(1);
 
         unsigned char c = d[*in++];
 
@@ -188,8 +192,8 @@ int main(int argc, char** argv){
 					}
 				}
 				else if((strcmp(argv[1], "--decode")) == 0) {
-					infof("File yet to decode\n");
 					int result = base64decode(data, fRead, finalData, sizeof(finalData));
+					infof("File decoded\n");
 					infof("result %d\n", result);
 					int fileDescTarget = open("decoded.txt", O_CREAT | O_WRONLY, S_IROTH | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
                                         if(fileDescTarget < 0)
