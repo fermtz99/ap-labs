@@ -1,3 +1,6 @@
+// Fernando Martinez
+// A01630401
+
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
@@ -12,10 +15,27 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
+	"strings"
+	"time"
 )
+
 
 //!+broadcaster
 type client chan<- string // an outgoing message channel
+
+type clientInfo struct {
+        username string
+	ip string
+        admin bool
+	clientNum int
+        clientChan client
+}
+
+
+var clientList []clientInfo
+
+var usersConnected int = 0
 
 var (
 	entering = make(chan client)
@@ -26,13 +46,86 @@ var (
 func broadcaster() {
 	clients := make(map[client]bool) // all connected clients
 	for {
+		i := 0
+		for clies := range clients {
+			clientList[i].clientChan = clies
+			i++
+		}
 		select {
 		case msg := <-messages:
-			// Broadcast incoming message to all
-			// clients' outgoing message channels.
-			for cli := range clients {
-				cli <- msg
-			}
+			mString := strings.Split(msg, " ")
+			user := mString[0]
+			//fmt.Println(user)
+			// Show all users
+			if mString[2] == "/users" {
+				msg = "irc-server > "
+				for clie := 0; clie < usersConnected; clie++ {
+					msg = msg + clientList[clie].username + ", "
+				}
+				for client := range clientList {
+					if clientList[client].username == user {
+						clientList[client].clientChan <- msg
+					}
+				}
+			} else if mString[2] == "/msg" {
+				otherUser := mString[3]
+				msg = "Message from " + user + " > " + strings.Join(mString[4:], " ")
+				for client := range clientList {
+                                        if clientList[client].username == otherUser {
+                                                clientList[client].clientChan <- msg
+                                        }
+                                }
+			} else if mString[2] == "/time" {
+				msg = "irc-server > " + time.Now().Format("01-02-2006 15:04:05")
+				for client := range clientList {
+                                        if clientList[client].username == user {
+                                                clientList[client].clientChan <- msg
+                                        }
+                                }
+			} else if mString[2] == "/user" {
+				var found bool = false
+				otherUser := mString[3]
+				for client := range clientList {
+                                        if clientList[client].username == otherUser {
+                                                msg = "irc-server > Username: " + clientList[client].username + ", IP: " + clientList[client].ip
+						found = true
+                                        }
+                                }
+				if !found {
+					msg = "User not found"
+				}
+				for client := range clientList {
+                                        if clientList[client].username == user {
+                                                clientList[client].clientChan <- msg
+                                        }
+                                }
+			} else if mString[2] == "/kick" {
+				otherUser := mString[3]
+				for client := range clientList {
+                                        if clientList[client].username == user {
+						if clientList[client].admin {
+							msg = "You kicked user [" + otherUser + "]"
+							clientList[client].clientChan <- msg
+							for otherClient := range clientList {
+								if clientList[otherClient].username == otherUser {
+									clientList[otherClient].clientChan <- "You were kicked"
+									delete(clients, clientList[otherClient].clientChan)
+									close(clientList[otherClient].clientChan)
+								}
+							}
+							msg = "[" + otherUser + "] was kicked from the channel"
+							for cli := range clients {
+                                                		cli <- msg
+							}
+						}
+                                        }
+                                }
+			} else {
+                                for cli := range clients {
+                                        cli <- msg
+                                }
+                        }
+
 
 		case cli := <-entering:
 			clients[cli] = true
@@ -51,19 +144,34 @@ func handleConn(conn net.Conn) {
 	ch := make(chan string) // outgoing client messages
 	go clientWriter(conn, ch)
 
-	who := conn.RemoteAddr().String()
-	ch <- "You are " + who
-	messages <- who + " has arrived"
+	input := bufio.NewScanner(conn)
+	input.Scan()
+	username := input.Text()
+
+	// Info about the new user
+	isAdmin := usersConnected == 0;
+	newClient := clientInfo{username: username, ip: conn.RemoteAddr().String() ,admin: isAdmin, clientNum: usersConnected}
+	clientList = append(clientList, newClient)
+	usersConnected++
+
+	//who := conn.RemoteAddr().String()
+	ch <- "Your user [" + username + "] is successfully logged"
+	if isAdmin {
+		ch <- "Congrats, you were the first user."
+		ch <- "You're the new IRC Server ADMIN"
+	}
+	messages <- "irc-server > New connected user [" + username + "]"
+	//messages <- username + " has arrived"
 	entering <- ch
 
-	input := bufio.NewScanner(conn)
+	//input := bufio.NewScanner(conn)
 	for input.Scan() {
-		messages <- who + ": " + input.Text()
+		messages <- username + " > " + input.Text()
 	}
 	// NOTE: ignoring potential errors from input.Err()
 
 	leaving <- ch
-	messages <- who + " has left"
+	messages <- "irc-server > [" + username + "]" + " has left"
 	conn.Close()
 }
 
@@ -77,12 +185,17 @@ func clientWriter(conn net.Conn, ch <-chan string) {
 
 //!+main
 func main() {
-	listener, err := net.Listen("tcp", "localhost:8000")
+	host := os.Args[2]
+	port := os.Args[4]
+	localhost := host + ":" + port
+	fmt.Println("irc-server > Simple IRC Server started at " + localhost)
+	listener, err := net.Listen("tcp", localhost)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	go broadcaster()
+	fmt.Println("irc-server > Ready for receiving new clients")
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

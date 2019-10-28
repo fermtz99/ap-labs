@@ -1,3 +1,6 @@
+// Fernando Martinez
+// A01630401
+
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
@@ -11,15 +14,21 @@ import (
 	"log"
 	"net"
 	"os"
+	"fmt"
 )
 
 //!+
 func main() {
-	conn, err := net.Dial("tcp", "localhost:8000")
+	username := os.Args[2]
+	server := os.Args[4]
+	conn, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Fprint(conn, username)
+	//fmt.Println()
 	done := make(chan struct{})
+	fmt.Print("Press enter to continue")
 	go func() {
 		io.Copy(os.Stdout, conn) // NOTE: ignoring errors
 		log.Println("done")
