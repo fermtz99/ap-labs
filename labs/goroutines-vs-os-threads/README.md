@@ -7,6 +7,21 @@ Then, do the 9.4 and 9.5 exercises.
 - Your 2 programs must automatically generate their proper  result report depending on what parameters they received.
 - Generated reports are free format and written on any file extension (i.e. .txt, .pdf, .md, .svg, .png, .jpg, .tex)
 
+To Run files
+------------
+- Exercise 9.4
+```
+go run 9-4exercise.go
+```
+- Exercise 9.5
+```
+go run 9-5exercise.go
+```
+- Results generated in
+```
+9-4result.txt 9-5 result.txt
+```
+
 General Requirements and Considerations
 ---------------------------------------
 - Submit only `*.go` files.
