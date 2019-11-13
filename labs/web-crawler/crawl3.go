@@ -16,7 +16,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-
+	"flag"
 	"gopl.io/ch5/links"
 )
 
@@ -43,23 +43,38 @@ func crawl(url string) []string {
 func main() {
 	worklist := make(chan []string)
 	var n int // number of pending sends to worklist
+	var i int // number of depth completed
+
+	// Check the correct format
+	if len(os.Args) < 2 {
+		fmt.Println("Usage:")
+		fmt.Println("go run -depth=<number> <url to crawl>")
+	}
 
 	// Start with the command-line arguments.
+	var depth = flag.Int("depth", 1, "Enter the depth for the web crawler")
+	flag.Parse()
 	n++
-	go func() { worklist <- os.Args[1:] }()
+	go func() { worklist <- os.Args[2:] }()
 
 	// Crawl the web concurrently.
 	seen := make(map[string]bool)
 	for ; n > 0; n-- {
 		list := <-worklist
+		i = 0
 		for _, link := range list {
-			if !seen[link] {
-				seen[link] = true
-				n++
-				go func(link string) {
-					worklist <- crawl(link)
-				}(link)
+			if i > *depth {
+				break
+			} else {
+				if !seen[link] {
+					seen[link] = true
+					n++
+					go func(link string) {
+						worklist <- crawl(link)
+					}(link)
+				}
 			}
+			i++
 		}
 	}
 }
